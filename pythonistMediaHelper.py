@@ -1,6 +1,6 @@
 from pathlib import Path
-from datetime import datetime
-import platform
+import shutil
+from datetime import datetime, timedelta
 
 VOLUMES_PATH = Path("/Volumes")
 DEFAULT_SUBFOLDERS = ["pics", "videos", "projectFiles"]
@@ -61,11 +61,22 @@ def createSubfoders(create, DEFAULT_SUBFOLDERS):
   print("✅ All destination folders were created successfully!")
 
 def copySonyPictures(origin: Path, destination: Path):
-   print( f"Copying Sony pictures from {origin} to {destination}... (not implemented)")
-   print("Pictures at the sony camera are")
-   all_pictures = [p for p in origin.glob("*.ARW") if not p.name.startswith("._")]
-   for pic in all_pictures:
-       print(pic.name)
+  print( f"Copying Sony pictures from {origin} to {destination}... (not implemented)")
+  print("Pictures at the sony camera are")
+  all_pictures = [p for p in origin.glob("*.ARW") if not p.name.startswith("._")]
+  latest_ctime = max(p.stat().st_ctime for p in all_pictures)
+  latest_time = datetime.fromtimestamp(latest_ctime)
+  # Define the time threshold
+  threshold = latest_time - timedelta(hours=24)
+  # Select all pictures within the last `max_hours` from latest picture
+  latest_pics = [
+    p for p in all_pictures
+    if datetime.fromtimestamp(p.stat().st_ctime) >= threshold
+  ]
+  # Copy them to destination
+  for pic in latest_pics:
+    shutil.copy2(pic, destination)
+    print(f"Copied: {pic.name}")
    
 def copySonyVideos(origin: Path, destination: Path):
     print(f"Copying Sony videos from {origin} to {destination}... (not implemented)")
